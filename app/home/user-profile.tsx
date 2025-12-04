@@ -1,12 +1,10 @@
-import { useAuth } from '@/app/context/AuthProvider';
-import { useProfile } from '@/app/context/ProfileProvider';
+import Footer from '@/components/Footer';
 import { supabase } from '@/lib/supabase_client';
 import { Feather, Ionicons } from '@expo/vector-icons';
-import { Link } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Dimensions, FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Footer from '../../components/Footer';
 
 const { width } = Dimensions.get('window');
 const COLUMN_COUNT = 3;
@@ -17,28 +15,51 @@ interface Post {
   image_url: string;
 }
 
-export default function Profile() {
-  const { user } = useAuth();
-  const { profilePhotoUrl, username, bio } = useProfile();
-  
-  // Posts state
+interface UserProfile {
+  username: string;
+  profile_photo_url: string;
+  bio: string;
+}
+
+export default function UserProfile() {
+  const router = useRouter();
+  const params = useLocalSearchParams();
+  const userId = params.userId as string;
+
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user) {
+    if (userId) {
+      fetchUserProfile();
       fetchUserPosts();
     }
-  }, [user]);
+  }, [userId]);
+
+  const fetchUserProfile = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('username, profile_photo_url, bio')
+        .eq('id', userId)
+        .single();
+
+      if (error) throw error;
+
+      setUserProfile(data);
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      setUserProfile(null);
+    }
+  };
 
   const fetchUserPosts = async () => {
-    if (!user) return;
-
     try {
       const { data, error } = await supabase
         .from('posts')
         .select('id, image_url')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -73,18 +94,32 @@ export default function Profile() {
     );
   };
 
+  if (loading || !userProfile) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Feather name="arrow-left" size={24} color="black" />
+          </TouchableOpacity>
+          <Text style={styles.headerUsername}>{userProfile?.username || 'Loading...'}</Text>
+          <View style={styles.placeholder} />
+        </View>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#3897f0" />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <Feather name="lock" size={14} color="black" style={styles.lockIcon} />
-          <Text style={styles.username}>{username || 'Loading...'}</Text>
-          <Feather name="chevron-down" size={14} color="black" />
-        </View>
-        <TouchableOpacity style={styles.menuButton}>
-           <Feather name="menu" size={24} color="black" />
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <Feather name="arrow-left" size={24} color="black" />
         </TouchableOpacity>
+        <Text style={styles.headerUsername}>{userProfile.username}</Text>
+        <View style={styles.placeholder} />
       </View>
 
       <View style={styles.content}>
@@ -92,31 +127,25 @@ export default function Profile() {
         <View style={styles.profileInfo}>
           <View style={styles.avatarContainer}>
             <View style={styles.avatarRing}>
-               <Image 
-                 source={{ 
-                   uri: profilePhotoUrl || 'https://i.pravatar.cc/150?u=jacob_w' 
-                 }} 
-                 style={styles.avatar} 
-               />
+              <Image
+                source={{
+                  uri: userProfile.profile_photo_url || 'https://i.pravatar.cc/150?u=default'
+                }}
+                style={styles.avatar}
+              />
             </View>
           </View>
-          
-          <Text style={styles.fullName}>{username || 'User'}</Text>
-          <Text style={styles.bio}>
-            {bio || 'Digital goodies designer @pixsellz\nEverything is designed.'}
-          </Text>
 
-          <Link href="/home/edit-profile" asChild>
-            <TouchableOpacity style={styles.editProfileButton}>
-              <Text style={styles.editProfileText}>Edit Profile</Text>
-            </TouchableOpacity>
-          </Link>
+          <Text style={styles.fullName}>{userProfile.username}</Text>
+          <Text style={styles.bio}>
+            {userProfile.bio || 'No bio available'}
+          </Text>
         </View>
 
         {/* Tabs */}
         <View style={styles.tabs}>
           <View style={[styles.tab, styles.activeTab]}>
-             <Ionicons name="grid-outline" size={24} color="black" />
+            <Ionicons name="grid-outline" size={24} color="black" />
           </View>
         </View>
 
@@ -131,7 +160,6 @@ export default function Profile() {
           ListEmptyComponent={renderEmptyComponent}
         />
       </View>
-
       <Footer />
     </SafeAreaView>
   );
@@ -144,28 +172,28 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    paddingHorizontal: 15,
     paddingVertical: 12,
     borderBottomWidth: 0.5,
     borderBottomColor: '#dbdbdb',
-    position: 'relative',
   },
-  headerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  backButton: {
+    width: 40,
   },
-  lockIcon: {
-    marginRight: 4,
-  },
-  username: {
+  headerUsername: {
     fontWeight: '600',
     fontSize: 16,
-    marginRight: 4,
+    color: '#262626',
   },
-  menuButton: {
-    position: 'absolute',
-    right: 15,
+  placeholder: {
+    width: 40,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   content: {
     flex: 1,
@@ -200,22 +228,6 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     color: '#262626',
     marginBottom: 20,
-  },
-  link: {
-    color: '#00376b',
-  },
-  editProfileButton: {
-    width: '100%',
-    borderWidth: 1,
-    borderColor: '#dbdbdb',
-    borderRadius: 5,
-    paddingVertical: 8,
-    alignItems: 'center',
-  },
-  editProfileText: {
-    fontWeight: '600',
-    fontSize: 13,
-    color: '#262626',
   },
   tabs: {
     flexDirection: 'row',

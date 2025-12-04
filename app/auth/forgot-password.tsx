@@ -2,17 +2,17 @@ import { supabase } from '@/lib/supabase_client';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+    ActivityIndicator,
+    Alert,
+    Image,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from 'react-native';
 
 export default function ForgotPassword() {
@@ -52,13 +52,11 @@ export default function ForgotPassword() {
         return Alert.alert('Error', 'No account found with this email address');
       }
 
-      // Send OTP via Supabase Auth
-      // Note: We use a workaround to send OTP codes
-      // First, we need to generate an OTP by requesting password recovery
+      // Send OTP via Supabase Auth using password recovery
       const { error } = await supabase.auth.resetPasswordForEmail(
         email.toLowerCase(),
         {
-          redirectTo: 'myinstaapp://reset-password', // This won't be used but is required
+          redirectTo: 'myinstaapp://reset-password',
         }
       );
 
@@ -104,7 +102,7 @@ export default function ForgotPassword() {
       const { error: verifyError } = await supabase.auth.verifyOtp({
         email: email.toLowerCase(),
         token: otp,
-        type: 'recovery'  // Changed from 'email' to 'recovery'
+        type: 'recovery'
       });
 
       if (verifyError) {
@@ -122,20 +120,24 @@ export default function ForgotPassword() {
         return Alert.alert('Error', updateError.message);
       }
 
+      // Sign out immediately
+      await supabase.auth.signOut();
+      
       setLoading(false);
-      Alert.alert(
-        'Success',
-        'Your password has been reset successfully!',
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              // Navigate back to previous screen (user stays logged in)
-              router.back();
-            }
-          }
-        ]
-      );
+      
+      // Navigate to login FIRST (before showing alert)
+      router.replace({
+        pathname: '/auth/login',
+        params: { fromReset: 'true' }
+      });
+      
+      // Show success alert AFTER navigation (on login screen)
+      setTimeout(() => {
+        Alert.alert(
+          'Success',
+          'Your password has been reset successfully! Please login with your new password.'
+        );
+      }, 500);
     } catch (error: any) {
       setLoading(false);
       console.error('Reset password error:', error);

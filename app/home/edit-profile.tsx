@@ -10,7 +10,6 @@ import {
     Image,
     KeyboardAvoidingView,
     Platform,
-    SafeAreaView,
     ScrollView,
     StyleSheet,
     Text,
@@ -18,6 +17,7 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function EditProfile() {
   const router = useRouter();
@@ -356,12 +356,12 @@ export default function EditProfile() {
             </View>
           </View>
 
-          {/* Reset Password */}
+          {/* Change Password */}
           <View style={styles.resetSection}>
             <Text style={styles.resetText}>
               Want to change your password?{' '}
-              <Link href="/home/forgot-password" style={styles.resetLink}>
-                Reset Password
+              <Link href="/home/change-password" style={styles.resetLink}>
+                Change Password
               </Link>
             </Text>
           </View>
@@ -497,10 +497,19 @@ const styles = StyleSheet.create({
   },
   resetSection: {
     paddingHorizontal: 15,
-    paddingVertical: 20,
+    paddingVertical: 10,
     alignItems: 'center',
   },
   resetText: {
+    fontSize: 12,
+    color: '#999',
+  },
+  forgotSection: {
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  forgotText: {
     fontSize: 12,
     color: '#999',
   },

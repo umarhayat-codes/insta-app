@@ -3,7 +3,8 @@ import { Feather } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
-import { ActivityIndicator, Alert, Image, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Footer from '../../components/Footer';
 import Header from '../../components/Header';
 import { useAuth } from '../context/AuthProvider';
@@ -29,6 +30,7 @@ export default function Main() {
   const [expandedPosts, setExpandedPosts] = useState<Set<string>>(new Set());
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [menuVisible, setMenuVisible] = useState(false);
+  const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
 
   useFocusEffect(
     useCallback(() => {
@@ -40,10 +42,10 @@ export default function Main() {
     try {
       if (!user) return;
 
+      // Fetch all posts from all users
       const { data: postsData, error: postsError } = await supabase
         .from('posts')
         .select('id, image_url, post_description, created_at, user_id')
-        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (postsError) {
@@ -52,24 +54,41 @@ export default function Main() {
         return;
       }
 
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('id, username, profile_photo_url, bio')
-        .eq('id', user.id)
-        .single();
-
-      if (userError) {
-        console.error('Error fetching user data:', userError);
+      if (!postsData || postsData.length === 0) {
+        setPosts([]);
         setLoading(false);
         return;
       }
 
-      const postsWithUser = postsData.map(post => ({
+      // Get unique user IDs from posts
+      const userIds = [...new Set(postsData.map(post => post.user_id))];
+
+      // Fetch user data for all users who have posts
+      const { data: usersData, error: usersError } = await supabase
+        .from('users')
+        .select('id, username, profile_photo_url, bio')
+        .in('id', userIds);
+
+      if (usersError) {
+        console.error('Error fetching users:', usersError);
+        setLoading(false);
+        return;
+      }
+
+      // Create a map of users by ID for quick lookup
+      const usersMap = new Map(usersData?.map(user => [user.id, user]) || []);
+
+      // Map posts with their corresponding user data
+      const postsWithUsers = postsData.map(post => ({
         ...post,
-        users: userData
+        users: usersMap.get(post.user_id) || {
+          username: 'Unknown',
+          profile_photo_url: 'https://via.placeholder.com/32',
+          bio: ''
+        }
       }));
 
-      setPosts(postsWithUser);
+      setPosts(postsWithUsers);
       setLoading(false);
     } catch (error) {
       console.error('Error in fetchPosts:', error);
@@ -126,9 +145,13 @@ export default function Main() {
     );
   };
 
-  const handleMenuPress = (post: Post) => {
-    setSelectedPost(post);
-    setMenuVisible(true);
+  const handleMenuPress = (post: Post, event: any) => {
+    // Get the position of the three-dot button
+    event.currentTarget.measure((x: number, y: number, width: number, height: number, pageX: number, pageY: number) => {
+      setMenuPosition({ x: pageX - 120, y: pageY + height + 5 }); // Position below button, aligned to right
+      setSelectedPost(post);
+      setMenuVisible(true);
+    });
   };
 
   const handleDelete = async () => {
@@ -183,6 +206,18 @@ export default function Main() {
     });
   };
 
+  const handleViewProfile = () => {
+    if (!selectedPost) return;
+    
+    setMenuVisible(false);
+    router.push({
+      pathname: '/home/user-profile',
+      params: { userId: selectedPost.user_id }
+    });
+  };
+
+  const isOwnPost = selectedPost?.user_id === user?.id;
+
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
@@ -204,10 +239,17 @@ export default function Main() {
           <View key={post.id} style={styles.post}>
             <View style={styles.postHeader}>
               <View style={styles.userInfo}>
-                <Image 
-                  source={{ uri: post.users?.profile_photo_url || 'https://via.placeholder.com/32' }} 
-                  style={styles.userAvatar} 
-                />
+                <TouchableOpacity 
+                  onPress={() => router.push({
+                    pathname: '/home/user-profile',
+                    params: { userId: post.user_id }
+                  })}
+                >
+                  <Image 
+                    source={{ uri: post.users?.profile_photo_url || 'https://via.placeholder.com/32' }} 
+                    style={styles.userAvatar} 
+                  />
+                </TouchableOpacity>
                 <View>
                   <View style={{flexDirection: 'row', alignItems: 'center'}}>
                     <Text style={styles.userName}>{post.users?.username || 'Unknown'}</Text>
@@ -215,7 +257,7 @@ export default function Main() {
                   <Text style={styles.location}>{post.users?.bio || ''}</Text>
                 </View>
               </View>
-              <TouchableOpacity onPress={() => handleMenuPress(post)}>
+              <TouchableOpacity onPress={(event) => handleMenuPress(post, event)}>
                 <Feather name="more-horizontal" size={20} color="black" />
               </TouchableOpacity>
             </View>
@@ -239,23 +281,32 @@ export default function Main() {
 
       <Footer />
 
-      {/* Bottom Sheet Menu */}
+      {/* Dropdown Context Menu */}
       {menuVisible && (
         <TouchableOpacity 
-          style={styles.modalOverlay} 
+          style={styles.menuOverlay} 
           activeOpacity={1} 
           onPress={() => setMenuVisible(false)}
         >
-          <View style={styles.bottomSheet}>
-            <TouchableOpacity style={styles.sheetItem} onPress={handleUpdate}>
-              <Text style={styles.sheetText}>Update</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.sheetItem} onPress={handleDelete}>
-              <Text style={[styles.sheetText, styles.deleteText]}>Delete</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.sheetItem} onPress={() => setMenuVisible(false)}>
-              <Text style={styles.sheetText}>Cancel</Text>
-            </TouchableOpacity>
+          <View style={[styles.dropdownMenu, { top: menuPosition.y, left: menuPosition.x }]}>
+            {isOwnPost ? (
+              <>
+                <TouchableOpacity style={styles.menuItem} onPress={handleUpdate}>
+                  <Feather name="edit-2" size={16} color="#262626" />
+                  <Text style={styles.menuText}>Edit Post</Text>
+                </TouchableOpacity>
+                <View style={styles.menuDivider} />
+                <TouchableOpacity style={styles.menuItem} onPress={handleDelete}>
+                  <Feather name="trash-2" size={16} color="#ed4956" />
+                  <Text style={[styles.menuText, styles.deleteText]}>Delete Post</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <TouchableOpacity style={styles.menuItem} onPress={handleViewProfile}>
+                <Feather name="user" size={16} color="#262626" />
+                <Text style={styles.menuText}>View Profile</Text>
+              </TouchableOpacity>
+            )}
           </View>
         </TouchableOpacity>
       )}
@@ -325,33 +376,43 @@ const styles = StyleSheet.create({
     fontSize: 11,
     marginTop: 4,
   },
-  modalOverlay: {
+  menuOverlay: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
+    backgroundColor: 'transparent',
   },
-  bottomSheet: {
+  dropdownMenu: {
+    position: 'absolute',
     backgroundColor: '#fff',
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
-    paddingBottom: 40,
+    borderRadius: 8,
+    width: 150,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+    paddingVertical: 4,
   },
-  sheetItem: {
-    paddingVertical: 18,
+  menuItem: {
+    flexDirection: 'row',
     alignItems: 'center',
-    borderBottomWidth: 0.5,
-    borderBottomColor: '#dbdbdb',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 12,
   },
-  sheetText: {
-    fontSize: 16,
-    color: '#000',
+  menuText: {
+    fontSize: 14,
+    color: '#262626',
+  },
+  menuDivider: {
+    height: 1,
+    backgroundColor: '#efefef',
+    marginVertical: 4,
   },
   deleteText: {
-    color: '#ff3b30',
-    fontWeight: '600',
+    color: '#ed4956',
   },
 });

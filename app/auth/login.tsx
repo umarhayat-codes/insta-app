@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase_client';
-import { router } from 'expo-router';
+import { Link, router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
@@ -23,13 +23,15 @@ const initialState = {
 export default function login() {
   const [state, setState] = useState(initialState);
   const { user, loading } = useAuth();
+  const params = useLocalSearchParams();
+  const fromReset = params.fromReset === 'true';
 
-  // Redirect if already authenticated
+  // Redirect if already authenticated (but not if coming from password reset)
   useEffect(() => {
-    if (!loading && user) {
+    if (!loading && user && !fromReset) {
       router.replace('/home/main');
     }
-  }, [user, loading]);
+  }, [user, loading, fromReset]);
 
   const handleChange = (name, value) => {
     setState((s) => ({ ...s, [name]: value }));
@@ -62,8 +64,8 @@ export default function login() {
     );
   }
 
-  // Don't render login form if user is authenticated
-  if (user) {
+  // Don't render login form if user is authenticated (unless coming from reset)
+  if (user && !fromReset) {
     return null;
   }
 
@@ -103,6 +105,13 @@ export default function login() {
             value={state.password}
             onChangeText={(value) => handleChange('password', value)}
           />
+
+          {/* Forgot Password Link */}
+          <View style={styles.forgotPasswordContainer}>
+            <Link href="/auth/forgot-password" style={styles.forgotPasswordLink}>
+              Forgot Password?
+            </Link>
+          </View>
 
           <TouchableOpacity style={styles.signUpBtn} onPress={handleLogin}>
             <Text style={styles.signUpText}>Login In</Text>
@@ -190,5 +199,15 @@ const styles = StyleSheet.create({
   loginText: {
     color: '#3797EF',
     fontWeight: '600',
+  },
+  forgotPasswordContainer: {
+    width: '100%',
+    alignItems: 'flex-end',
+    marginTop: 8,
+  },
+  forgotPasswordLink: {
+    color: '#3797EF',
+    fontSize: 12,
+    fontWeight: '500',
   },
 });
