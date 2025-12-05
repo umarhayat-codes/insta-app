@@ -1,36 +1,47 @@
-import React, { useEffect } from 'react';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
+import { useEffect, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { useAuth } from './context/AuthProvider';
+
+// Keep the native splash screen visible while we check auth
+SplashScreen.preventAutoHideAsync();
 
 export default function Index() {
   const { user, loading } = useAuth();
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    if (!loading) {
+    // Set a timer for 5 seconds
+    const timer = setTimeout(() => {
+      setIsReady(true);
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    // Only navigate and hide splash after timer completes and auth check is done
+    if (isReady && !loading) {
+      // Hide the native splash screen
+      SplashScreen.hideAsync();
+      
+      // Navigate based on auth state
       if (user) {
-        // User is authenticated, go to home
         router.replace('/home/main');
       } else {
-        // User is not authenticated, go to register
         router.replace('/auth/register');
       }
     }
-  }, [user, loading]);
+  }, [isReady, user, loading]);
 
-  // Show loading while checking auth state
-  return (
-    <View style={styles.container}>
-      <ActivityIndicator size="large" color="#3797EF" />
-    </View>
-  );
+  // Return empty view while splash is showing
+  return <View style={styles.container} />;
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
     backgroundColor: '#fff',
   },
 });

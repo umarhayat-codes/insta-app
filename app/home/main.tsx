@@ -246,7 +246,7 @@ export default function Main() {
                   })}
                 >
                   <Image 
-                    source={{ uri: post.users?.profile_photo_url || 'https://via.placeholder.com/32' }} 
+                    source={{ uri: post.users?.profile_photo_url || 'https://i.pravatar.cc/150?u=jacob_w' }} 
                     style={styles.userAvatar} 
                   />
                 </TouchableOpacity>
@@ -254,7 +254,7 @@ export default function Main() {
                   <View style={{flexDirection: 'row', alignItems: 'center'}}>
                     <Text style={styles.userName}>{post.users?.username || 'Unknown'}</Text>
                   </View>
-                  <Text style={styles.location}>{post.users?.bio || ''}</Text>
+                  <Text style={styles.location}>{post.users?.bio || 'Tokyo, Japan'}</Text>
                 </View>
               </View>
               <TouchableOpacity onPress={(event) => handleMenuPress(post, event)}>
@@ -345,27 +345,31 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   userName: {
+    fontFamily:'Roboto',
     fontWeight: '600',
     fontSize: 13,
   },
   location: {
+    fontFamily:'Roboto',
     fontSize: 11,
     color: '#262626',
   },
   postImage: {
     width: 375,
     height: 375,
+    borderColor:'#c0bebeff',
+    borderWidth:1
   },
   postInfo: {
-    paddingHorizontal: 12,
-    paddingTop: 8,
+    paddingHorizontal: 15,
+    paddingTop: 24
   },
   caption: {
     lineHeight: 18,
-    fontSize: 13,
+    fontSize: 13
   },
   captionUser: {
-    fontWeight: '600',
+    fontWeight: '600'
   },
   readMore: {
     color: '#8e8e8e',
@@ -374,7 +378,8 @@ const styles = StyleSheet.create({
   date: {
     color: '#8e8e8e',
     fontSize: 11,
-    marginTop: 4,
+    marginTop: 13,
+    marginBottom:15
   },
   menuOverlay: {
     position: 'absolute',

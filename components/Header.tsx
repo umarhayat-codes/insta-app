@@ -22,6 +22,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderBottomWidth: 0.5,
     borderBottomColor: '#dbdbdb',
+    backgroundColor:'#FAFAFA'
   },
   logo: {
     width: 105,

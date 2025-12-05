@@ -2,17 +2,17 @@ import { supabase } from '@/lib/supabase_client';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    Image,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Alert,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 
 export default function ForgotPassword() {
@@ -120,22 +120,17 @@ export default function ForgotPassword() {
         return Alert.alert('Error', updateError.message);
       }
 
-      // Sign out immediately
-      await supabase.auth.signOut();
-      
+      // User is now logged in automatically after verifyOtp
       setLoading(false);
       
-      // Navigate to login FIRST (before showing alert)
-      router.replace({
-        pathname: '/auth/login',
-        params: { fromReset: 'true' }
-      });
+      // Navigate to home page directly
+      router.replace('/home/main');
       
-      // Show success alert AFTER navigation (on login screen)
+      // Show success message after navigation
       setTimeout(() => {
         Alert.alert(
           'Success',
-          'Your password has been reset successfully! Please login with your new password.'
+          'Your password has been reset successfully!'
         );
       }, 500);
     } catch (error: any) {

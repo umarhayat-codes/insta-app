@@ -1,6 +1,8 @@
+import { signInWithGoogle } from '@/lib/googleAuth';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
+    Alert,
     Image,
     KeyboardAvoidingView,
     Platform,
@@ -32,7 +34,7 @@ export default function register() {
     }
   }, [user, loading]);
 
-  const handleChange = (name, value) => {
+  const handleChange = (name: string, value: string) => {
     setState((s) => ({ ...s, [name]: value }));
   };
 
@@ -76,6 +78,24 @@ export default function register() {
     
     alert('User registered successfully! Please check your email to verify your account.');
     router.replace('/auth/login');
+  };
+
+  const handleGoogleSignUp = async () => {
+    try {
+      const result = await signInWithGoogle();
+      
+      if (result.success) {
+        console.log('Google sign-up successful');
+        router.replace('/home/main');
+      } else if (result.cancelled) {
+        console.log('Google sign-up cancelled');
+      } else {
+        Alert.alert('Sign Up Failed', result.error || 'Failed to sign up with Google');
+      }
+    } catch (error: any) {
+      console.error('Google sign-up error:', error);
+      Alert.alert('Error', error.message || 'An error occurred during Google sign-up');
+    }
   };
 
   return (
@@ -139,7 +159,7 @@ export default function register() {
 
           <View style={styles.googleContainer}>
             <Text style={styles.orText}>OR</Text>
-            <TouchableOpacity style={styles.googleBtn}>
+            <TouchableOpacity style={styles.googleBtn} onPress={handleGoogleSignUp}>
               <Text style={styles.googleText}>Sign Up with Google</Text>
             </TouchableOpacity>
           </View>

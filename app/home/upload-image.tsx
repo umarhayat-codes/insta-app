@@ -1,23 +1,23 @@
 import { useAuth } from '@/app/context/AuthProvider';
 import { supabase } from '@/lib/supabase_client';
-import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    Image,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Alert,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
 
 export default function UploadImage() {
   const router = useRouter();
@@ -114,7 +114,7 @@ export default function UploadImage() {
         Alert.alert('Success', 'Your post has been updated successfully!', [
           {
             text: 'OK',
-            onPress: () => router.back(),
+            onPress: () => router.replace('/home/main'),
           },
         ]);
       } else {
@@ -176,9 +176,7 @@ export default function UploadImage() {
                 <Image source={{ uri: selectedImage }} style={styles.uploadedImage} />
               ) : (
                 <>
-                  <View style={styles.uploadIconContainer}>
-                    <Ionicons name="arrow-up" size={32} color="#000" />
-                  </View>
+                  <Image source={require('@/assets/images/Upload.png')} style={{ width: 48, height: 48}} />
                   <Text style={styles.uploadText}>Upload Image</Text>
                 </>
               )}
@@ -279,6 +277,7 @@ const styles = StyleSheet.create({
     borderColor: '#000',
   },
   uploadText: {
+    fontFamily:'Roboto',
     fontSize: 16,
     color: '#262626',
     fontWeight: '500',
@@ -293,16 +292,18 @@ const styles = StyleSheet.create({
     paddingTop: 20,
   },
   descriptionLabel: {
+    fontFamily:'Roboto',
     fontSize: 14,
     fontWeight: '600',
     color: '#262626',
     marginBottom: 8,
   },
   descriptionInput: {
+    fontFamily:'Roboto',
     borderWidth: 1,
     borderColor: '#dbdbdb',
     borderRadius: 8,
-    padding: 12,
+    padding: 14,
     fontSize: 14,
     color: '#262626',
     backgroundColor: '#fafafa',

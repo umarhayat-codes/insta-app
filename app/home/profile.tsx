@@ -2,7 +2,7 @@ import { useAuth } from '@/app/context/AuthProvider';
 import { useProfile } from '@/app/context/ProfileProvider';
 import { supabase } from '@/lib/supabase_client';
 import { Feather, Ionicons } from '@expo/vector-icons';
-import { Link } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Dimensions, FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -24,12 +24,14 @@ export default function Profile() {
   // Posts state
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
+  // Refetch posts whenever component renders (including when navigating back)
   useEffect(() => {
     if (user) {
       fetchUserPosts();
     }
-  }, [user]);
+  }); // No dependency array - runs on every render
 
   const fetchUserPosts = async () => {
     if (!user) return;
@@ -116,6 +118,7 @@ export default function Profile() {
         {/* Tabs */}
         <View style={styles.tabs}>
           <View style={[styles.tab, styles.activeTab]}>
+            {/* <Image source={require('@/assets/images/tab.png')} style={{ width: 48, height: 48}} /> */}
              <Ionicons name="grid-outline" size={24} color="black" />
           </View>
         </View>
@@ -189,17 +192,18 @@ const styles = StyleSheet.create({
     borderRadius: 43,
   },
   fullName: {
-    fontWeight: 'bold',
     fontSize: 14,
-    marginBottom: 4,
+    marginBottom: 2,
     color: '#262626',
+    fontWeight:'600'
   },
   bio: {
     textAlign: 'center',
     fontSize: 14,
     lineHeight: 20,
     color: '#262626',
-    marginBottom: 20,
+    marginBottom: 15,
+    fontWeight:'400'
   },
   link: {
     color: '#00376b',

@@ -9,7 +9,7 @@ export default function Footer() {
   const pathname = usePathname();
   
   // Use profile photo if available, otherwise fallback to pravatar
-  const avatarUrl = profilePhotoUrl || 'https://i.pravatar.cc/150?u=m';
+  const avatarUrl = profilePhotoUrl || 'https://i.pravatar.cc/150?u=jacob_w';
 
   // Determine which route is active
   const isMainActive = pathname === '/home/main';

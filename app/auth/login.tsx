@@ -1,8 +1,10 @@
+import { signInWithGoogle } from '@/lib/googleAuth';
 import { supabase } from '@/lib/supabase_client';
 import { Link, router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
+    Alert,
     Image,
     KeyboardAvoidingView,
     Platform,
@@ -33,7 +35,7 @@ export default function login() {
     }
   }, [user, loading, fromReset]);
 
-  const handleChange = (name, value) => {
+  const handleChange = (name: string, value: string) => {
     setState((s) => ({ ...s, [name]: value }));
   };
 
@@ -52,6 +54,24 @@ export default function login() {
     else {
       console.log('error', error)
       alert(error.message)
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      const result = await signInWithGoogle();
+      
+      if (result.success) {
+        console.log('Google login successful');
+        router.replace('/home/main');
+      } else if (result.cancelled) {
+        console.log('Google login cancelled');
+      } else {
+        Alert.alert('Login Failed', result.error || 'Failed to sign in with Google');
+      }
+    } catch (error: any) {
+      console.error('Google login error:', error);
+      Alert.alert('Error', error.message || 'An error occurred during Google sign-in');
     }
   };
 
@@ -118,7 +138,7 @@ export default function login() {
           </TouchableOpacity>
 
           <View style={styles.googleContainer}>
-            <TouchableOpacity style={styles.googleBtn}>
+            <TouchableOpacity style={styles.googleBtn} onPress={handleGoogleLogin}>
               <Image style={{width: 20, height: 25, marginRight: 10}} source={require('../../assets/images/google_icon.png')} />
               <Text style={styles.googleText}>Login with Google</Text>
             </TouchableOpacity>

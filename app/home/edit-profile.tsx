@@ -5,17 +5,17 @@ import * as ImagePicker from 'expo-image-picker';
 import { Link, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    Image,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Alert,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -271,6 +271,11 @@ export default function EditProfile() {
           </View>
 
           {/* Form Fields */}
+
+          
+          
+
+
           <View style={styles.formSection}>
             <View style={styles.fieldRow}>
               <Text style={styles.label}>Username</Text>
@@ -448,7 +453,7 @@ const styles = StyleSheet.create({
   fieldRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 15,
+    paddingHorizontal: 25,
     paddingVertical: 12,
     borderBottomWidth: 0.5,
     borderBottomColor: '#dbdbdb',
@@ -459,7 +464,7 @@ const styles = StyleSheet.create({
   bioFieldRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 15,
+    paddingHorizontal: 25,
     paddingVertical: 12,
     borderBottomWidth: 0.5,
     borderBottomColor: '#dbdbdb',
@@ -490,14 +495,14 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     color: '#262626',
-    paddingHorizontal: 15,
+    paddingHorizontal: 25,
     paddingVertical: 10,
     width: 375,
     alignSelf: 'center',
   },
   resetSection: {
     paddingHorizontal: 15,
-    paddingVertical: 10,
+    paddingVertical: 40,
     alignItems: 'center',
   },
   resetText: {
